@@ -1,6 +1,13 @@
 # Original idea by @ISnackable. Many thanks to him for handling the most hardest parts!
 # https://github.com/ISnackable/CercubePlus/blob/main/.github/workflows/Build.yml
 
+# Required GitHub Secrets for MinIO S3 upload:
+# - MINIO_ACCESS_KEY: Your MinIO access key
+# - MINIO_SECRET_KEY: Your MinIO secret key  
+# - MINIO_ENDPOINT_URL: Your MinIO server endpoint (e.g., https://minio.example.com)
+# - MINIO_BUCKET_NAME: The S3 bucket name to upload to
+# - PERSONAL_ACCESS_TOKEN: GitHub PAT for triggering Altstore updates (if used)
+
 name: Build and Release YTLitePlus
 
 on:
@@ -41,8 +48,8 @@ on:
         default: false
         required: false
         type: boolean
-      create_release:
-        description: "Create a draft release (Private)"
+      upload_to_s3:
+        description: "Upload iPA to MinIO S3"
         default: false
         required: false
         type: boolean
@@ -206,28 +213,32 @@ jobs:
           echo "CATBOX_FILE=$CATBOX_FILE" >> $GITHUB_ENV
           echo "CATBOX_URL=$CATBOX_URL" >> $GITHUB_ENV
       
-      - name: Prepare Release Notes
-        if: ${{ inputs.create_release }}
+      - name: Configure AWS CLI for MinIO
+        if: ${{ inputs.upload_to_s3 }}
         run: |
-          export TODAY=$(date '+%Y-%m-%d')
-          sed "s/%ytliteplus_version%/${{ env.YTLITE_VERSION }}/g; s/%youtube_version%/5.0.1/g; s/%catbox_url%/${{ env.CATBOX_FILE }}/g; s/%date%/$TODAY/g" \
-          main/.github/RELEASE_TEMPLATE/Release.md > ${{ github.workspace }}/release_notes.md
+          pip install awscli
+          aws configure set aws_access_key_id ${{ secrets.MINIO_ACCESS_KEY }}
+          aws configure set aws_secret_access_key ${{ secrets.MINIO_SECRET_KEY }}
+          aws configure set default.region us-east-1
+          aws configure set default.output json
 
-      - name: Create Draft Release
-        if: ${{ inputs.create_release }}
-        id: create_release
-        uses: softprops/action-gh-release@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: v${{ env.YT_VERSION }}-5.0.1
-          name: v${{ env.YT_VERSION }}-5.0.1 - YTLitePlus
-          files: main/packages/*.ipa
-          draft: true
-          body_path: ${{ github.workspace }}/release_notes.md
+      - name: Upload to MinIO S3
+        if: ${{ inputs.upload_to_s3 }}
+        run: |
+          PACKAGE_NAME="${{ steps.build_package.outputs.package }}"
+          S3_KEY="releases/YTLitePlus_${{ env.YT_VERSION }}_${{ env.YTLITE_VERSION }}/${PACKAGE_NAME}"
+          
+          aws s3 cp "${{ github.workspace }}/main/packages/${PACKAGE_NAME}" \
+            "s3://${{ secrets.MINIO_BUCKET_NAME }}/${S3_KEY}" \
+            --endpoint-url ${{ secrets.MINIO_ENDPOINT_URL }}
+          
+          # Generate public URL (adjust based on your MinIO setup)
+          S3_URL="${{ secrets.MINIO_ENDPOINT_URL }}/${{ secrets.MINIO_BUCKET_NAME }}/${S3_KEY}"
+          echo "S3_URL=$S3_URL" >> $GITHUB_ENV
+          echo "Uploaded to MinIO S3: $S3_URL"
 
       - name: Update Altstore Source with latest release
-        if: ${{ inputs.create_release }}
+        if: ${{ inputs.upload_to_s3 }}
         run: |
           curl --location --request POST 'https://api.github.com/repos/Balackburn/YTLitePlusAltstore/dispatches' \
           --header 'Authorization: token ${{ secrets.PERSONAL_ACCESS_TOKEN }}' \
@@ -250,12 +261,10 @@ jobs:
         run: |
           echo -e '### 🐱 Catbox Upload\n\nThe Catbox upload was successful! Here is a permanent shareable link: '$CATBOX_URL >> $GITHUB_STEP_SUMMARY
 
-      - name: Job Summary - Draft Release
-        if: ${{ inputs.create_release }}
+      - name: Job Summary - MinIO S3 Upload
+        if: ${{ inputs.upload_to_s3 }}
         run: |
-          REPO_URL="https://github.com/${{ github.repository }}"
-          RELEASES_URL="$REPO_URL/releases"
-          echo -e '### 🚀 Draft Release\n\nThe release draft has been created successfully! You can view your releases here: '$RELEASES_URL >> $GITHUB_STEP_SUMMARY
+          echo -e '### 🗄️ MinIO S3 Upload\n\nThe upload to MinIO S3 was successful! File URL: '$S3_URL >> $GITHUB_STEP_SUMMARY
 
       - name: Job Summary - Link to remove GitHub Action runs
         run: |
