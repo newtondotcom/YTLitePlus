@@ -4,7 +4,7 @@
 // In alphabetical order for tweaks after YTLitePlus
 NSArray *NSUserDefaultsCopyKeys = @[
     // YTLitePlus - gathered using get_keys.py
-    @"YTTapToSeek_enabled", @"alwaysShowRemainingTime_enabled", @"bigYTMiniPlayer_enabled", @"castConfirm_enabled",
+    @"YTTapToSeek_enabled", @"alwaysShowRemainingTime_enabled", @"bigYTMiniPlayer_enabled", @"castConfirm_enabled", @"securityLayer_enabled",
     @"disableAccountSection_enabled", @"disableAmbientModeFullscreen_enabled",
     @"disableAmbientModePortrait_enabled", @"disableAutoplaySection_enabled", @"disableCollapseButton_enabled",
     @"disableEngagementOverlay_enabled", @"disableLiveChatSection_enabled",

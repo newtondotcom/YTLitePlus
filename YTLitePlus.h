@@ -314,3 +314,14 @@ typedef NS_ENUM(NSUInteger, GestureSection) {
 - (void)showMessageMainThread:(id)message;
 + (id)sharedInstance;
 @end
+
+// Security Layer - YTLitePlus Security System
+@interface SecurityLayerManager : NSObject
++ (instancetype)sharedManager;
+- (BOOL)isAuthenticatedSecurely;
+- (void)setAuthenticationState:(BOOL)authenticated;
+- (void)showStopwatchInterface;
+@end
+
+@interface StopwatchViewController : UIViewController
+@end
