@@ -6,7 +6,6 @@
 # - MINIO_SECRET_KEY: Your MinIO secret key  
 # - MINIO_ENDPOINT_URL: Your MinIO server endpoint (e.g., https://minio.example.com)
 # - MINIO_BUCKET_NAME: The S3 bucket name to upload to
-# - PERSONAL_ACCESS_TOKEN: GitHub PAT for triggering Altstore updates (if used)
 
 name: Build and Release YTLitePlus
 
@@ -237,15 +236,7 @@ jobs:
           echo "S3_URL=$S3_URL" >> $GITHUB_ENV
           echo "Uploaded to MinIO S3: $S3_URL"
 
-      - name: Update Altstore Source with latest release
-        if: ${{ inputs.upload_to_s3 }}
-        run: |
-          curl --location --request POST 'https://api.github.com/repos/Balackburn/YTLitePlusAltstore/dispatches' \
-          --header 'Authorization: token ${{ secrets.PERSONAL_ACCESS_TOKEN }}' \
-          --header 'Content-Type: application/json' \
-          --data-raw '{
-            "event_type": "update-altstore-source-trigger"
-          }'
+
 
       - name: Job Summary
         run: |
