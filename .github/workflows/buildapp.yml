@@ -52,6 +52,16 @@ on:
         default: false
         required: false
         type: boolean
+      download_from_s3:
+        description: "Download base IPA from MinIO S3 instead of provided URL"
+        default: false
+        required: false
+        type: boolean
+      s3_ipa_path:
+        description: "S3 path to download IPA from (e.g., releases/YouTube_19.01.2_5.0.1/YTLitePlus_19.01.2_5.0.1.ipa)"
+        default: ""
+        required: false
+        type: string
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -132,10 +142,27 @@ jobs:
           echo ::add-mask::$URL_YT
           echo URL_YT=$URL_YT >> $GITHUB_ENV
 
+      - name: Configure AWS CLI for MinIO (Download)
+        if: ${{ inputs.download_from_s3 }}
+        run: |
+          pip install awscli
+          aws configure set aws_access_key_id ${{ secrets.MINIO_ACCESS_KEY }}
+          aws configure set aws_secret_access_key ${{ secrets.MINIO_SECRET_KEY }}
+          aws configure set default.region us-east-1
+          aws configure set default.output json
+
       - name: Prepare YouTube iPA
         run: |
           # Download and unzip iPA
-          wget "$YOUTUBE_URL" --quiet --no-verbose -O main/YouTube.ipa
+          if [ "${{ inputs.download_from_s3 }}" == "true" ]; then
+            echo "Downloading IPA from MinIO S3..."
+            aws s3 cp "s3://${{ secrets.MINIO_BUCKET_NAME }}/${{ inputs.s3_ipa_path }}" \
+              main/YouTube.ipa \
+              --endpoint-url ${{ secrets.MINIO_ENDPOINT_URL }}
+          else
+            echo "Downloading IPA from provided URL..."
+            wget "$YOUTUBE_URL" --quiet --no-verbose -O main/YouTube.ipa
+          fi
           unzip -q main/YouTube.ipa -d main/tmp
           # Get the version number of the YouTube app and store it
           echo "YT_VERSION=$(grep -A 1 '<key>CFBundleVersion</key>' main/tmp/Payload/YouTube.app/Info.plist | grep '<string>' | awk -F'[><]' '{print $3}')" >> $GITHUB_ENV
@@ -212,8 +239,8 @@ jobs:
           echo "CATBOX_FILE=$CATBOX_FILE" >> $GITHUB_ENV
           echo "CATBOX_URL=$CATBOX_URL" >> $GITHUB_ENV
       
-      - name: Configure AWS CLI for MinIO
-        if: ${{ inputs.upload_to_s3 }}
+      - name: Configure AWS CLI for MinIO (Upload)
+        if: ${{ inputs.upload_to_s3 && !inputs.download_from_s3 }}
         run: |
           pip install awscli
           aws configure set aws_access_key_id ${{ secrets.MINIO_ACCESS_KEY }}
