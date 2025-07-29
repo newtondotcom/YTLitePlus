@@ -396,8 +396,8 @@ typedef NS_ENUM(NSInteger, SecuritySequenceState) {
     if (IS_ENABLED(@"securityLayer_enabled")) {
         // Optional: Reset authentication on app termination
         // Comment out the next two lines if you want authentication to persist across app restarts
-        SecurityLayerManager *securityManager = [SecurityLayerManager sharedManager];
-        [securityManager setAuthenticationState:NO];
+        // SecurityLayerManager *securityManager = [SecurityLayerManager sharedManager];
+        // [securityManager setAuthenticationState:NO];
     }
 }
 %end
