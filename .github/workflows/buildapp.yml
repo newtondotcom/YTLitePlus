@@ -42,11 +42,6 @@ on:
         default: true
         required: false
         type: boolean
-      catbox_upload:
-        description: "Upload iPA to Catbox.moe (URL)"
-        default: false
-        required: false
-        type: boolean
       upload_to_s3:
         description: "Upload iPA to MinIO S3"
         default: false
@@ -205,19 +200,6 @@ jobs:
           path: ${{ github.workspace }}/main/packages/${{ steps.build_package.outputs.package }}
           if-no-files-found: error
           
-      - name: Upload Artifact to Catbox
-        if: ${{ inputs.catbox_upload }}
-        run: |
-          RESPONSE=$(curl -F "reqtype=fileupload" -F "fileToUpload=@${{ github.workspace }}/main/packages/${{ steps.build_package.outputs.package }}" https://catbox.moe/user/api.php)
-          CATBOX_URL=$(echo $RESPONSE | grep -o -E 'https://files.catbox.moe/[^"]*')
-          echo "Uploaded artifact to $CATBOX_URL"
-          CATBOX_FILE=$(echo $CATBOX_URL | sed 's|https://files.catbox.moe/||')
-          # Pass Catbox URL to the release steps
-          echo "CATBOX_FILE=$CATBOX_FILE" >> $GITHUB_ENV
-          echo "CATBOX_URL=$CATBOX_URL" >> $GITHUB_ENV
-      
-
-
       - name: Upload to MinIO S3
         if: ${{ inputs.upload_to_s3 }}
         run: |
@@ -233,8 +215,6 @@ jobs:
           echo "S3_URL=$S3_URL" >> $GITHUB_ENV
           echo "Uploaded to MinIO S3: $S3_URL"
 
-
-
       - name: Job Summary
         run: |
           echo -e '### 📺 Build Complete' >> $GITHUB_STEP_SUMMARY
@@ -243,11 +223,6 @@ jobs:
         if: ${{ inputs.upload_artifact }}
         run: |
           echo -e '### 📦 Artifact Upload\n\nThe artifact was uploaded successfully! Refresh and [scroll down](#artifacts) to view the artifact. Note that you must be signed in to GitHub to download it.' >> $GITHUB_STEP_SUMMARY
-
-      - name: Job Summary - Catbox Upload
-        if: ${{ inputs.catbox_upload}}
-        run: |
-          echo -e '### 🐱 Catbox Upload\n\nThe Catbox upload was successful! Here is a permanent shareable link: '$CATBOX_URL >> $GITHUB_STEP_SUMMARY
 
       - name: Job Summary - MinIO S3 Upload
         if: ${{ inputs.upload_to_s3 }}
