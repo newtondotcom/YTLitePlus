@@ -34,9 +34,6 @@
 [submodule "Tweaks/YTABConfig"]
 	path = Tweaks/YTABConfig
 	url = https://github.com/PoomSmart/YTABConfig
-[submodule "Tweaks/YTUHD"]
-	path = Tweaks/YTUHD
-	url = https://github.com/PoomSmart/YTUHD
 [submodule "Tweaks/YouGroupSettings"]
 	path = Tweaks/YouGroupSettings
 	url = https://github.com/PoomSmart/YouGroupSettings
