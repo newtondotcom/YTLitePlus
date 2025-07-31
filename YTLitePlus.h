@@ -299,12 +299,6 @@ typedef NS_ENUM(NSUInteger, GestureSection) {
 @property(nonatomic, strong) UITableView *tableView;
 @end
 
-// Snack bar
-@interface YTHUDMessage : NSObject
-+ (id)messageWithText:(id)text;
-- (void)setAction:(id)action;
-@end
-
 @interface GOOHUDMessageAction : NSObject
 - (void)setTitle:(NSString *)title;
 - (void)setHandler:(void (^)(id))handler;

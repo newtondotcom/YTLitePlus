@@ -591,13 +591,6 @@ BOOL isTabSelected = NO;
 }
 %end
 
-// Hide HUD Messages - @qnblackcat
-%hook YTHUDMessageView
-- (id)initWithMessage:(id)arg1 dismissHandler:(id)arg2 {
-    return IsEnabled(@"hideHUD_enabled") ? nil : %orig;
-}
-%end
-
 // Hide Video Player Collapse Button - @arichornlover
 %hook YTMainAppControlsOverlayView
 - (void)layoutSubviews {

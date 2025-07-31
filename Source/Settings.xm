@@ -144,8 +144,6 @@ static const NSInteger YTLiteSection = 789;
                     }
                 }       
                 [[UIPasteboard generalPasteboard] setString:settingsString];
-                // Show a confirmation message or perform some other action here
-                [[%c(GOOHUDManagerInternal) sharedInstance] showMessageMainThread:[%c(YTHUDMessage) messageWithText:@"Settings copied"]];
                 
                 // Show an option to export YouTube Plus settings
                 UIAlertController *exportAlert = [UIAlertController alertControllerWithTitle:@"Export Settings"
@@ -194,8 +192,6 @@ static const NSInteger YTLiteSection = 789;
                             }
                         }
                         [settingsViewController reloadData];
-                        // Show a confirmation toast
-                        [[%c(GOOHUDManagerInternal) sharedInstance] showMessageMainThread:[%c(YTHUDMessage) messageWithText:@"Settings applied"]];
                         // Show a reminder to import YouTube Plus settings as well
                         UIAlertController *reminderAlert = [UIAlertController alertControllerWithTitle:@"Reminder"
                                                             message:@"Remember to import your YouTube Plus settings as well"
@@ -703,8 +699,6 @@ static const NSInteger YTLiteSection = 789;
                 // Reload settings view after importing
                 YTSettingsViewController *settingsViewController = [self valueForKey:@"_settingsViewControllerDelegate"];
                 [settingsViewController reloadData];
-                // Show a confirmation message or perform some other action here
-                [[%c(GOOHUDManagerInternal) sharedInstance] showMessageMainThread:[%c(YTHUDMessage) messageWithText:@"Settings applied"]];
                 // Show a reminder to import YouTube Plus settings as well
                 UIAlertController *reminderAlert = [UIAlertController alertControllerWithTitle:@"Reminder"
                                                     message:@"Remember to import your YouTube Plus settings as well"
@@ -714,7 +708,6 @@ static const NSInteger YTLiteSection = 789;
             }
 
         } else if (controller.documentPickerMode == UIDocumentPickerModeExportToService || controller.documentPickerMode == UIDocumentPickerModeMoveToService) {
-            [[%c(GOOHUDManagerInternal) sharedInstance] showMessageMainThread:[%c(YTHUDMessage) messageWithText:@"Settings saved"]];
             // Export mode: Display a reminder to save YouTube Plus settings
             UIAlertController *exportAlert = [UIAlertController alertControllerWithTitle:@"Export Settings"
                                                 message:@"Note: This feature cannot save iSponsorBlock and most YouTube settings.\n\nWould you like to also export your YouTube Plus Settings?"
