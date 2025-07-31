@@ -116,21 +116,19 @@ jobs:
           (echo export PATH="/usr/local/opt/make/libexec/gnubin:$PATH" >> ~/.bash_profile)
           source ~/.bash_profile
 
-      - name: Configure AWS CLI for MinIO
+      - name: Install MinIO Client (mc)
         run: |
-          pip install awscli
-          aws configure set aws_access_key_id ${{ secrets.MINIO_ACCESS_KEY }}
-          aws configure set aws_secret_access_key ${{ secrets.MINIO_SECRET_KEY }}
-          aws configure set default.region us-east-1
-          aws configure set default.output json
+          wget https://dl.min.io/client/mc/release/darwin-amd64/mc
+          chmod +x mc
+          sudo mv mc /usr/local/bin/
+          # Configure MinIO client
+          mc alias set myminio ${{ secrets.MINIO_ENDPOINT_URL }} ${{ secrets.MINIO_ACCESS_KEY }} ${{ secrets.MINIO_SECRET_KEY }}
 
       - name: Prepare YouTube iPA
         run: |
-          # Download IPA from MinIO S3
+          # Download IPA from MinIO S3 using mc client
           echo "Downloading IPA from MinIO S3..."
-          aws s3 cp "s3://${{ secrets.MINIO_BUCKET_NAME }}/${{ inputs.s3_ipa_path }}" \
-            main/YouTube.ipa \
-            --endpoint-url ${{ secrets.MINIO_ENDPOINT_URL }}
+          mc cp myminio/${{ secrets.MINIO_BUCKET_NAME }}/${{ inputs.s3_ipa_path }} main/YouTube.ipa
           unzip -q main/YouTube.ipa -d main/tmp
           # Get the version number of the YouTube app and store it
           echo "YT_VERSION=$(grep -A 1 '<key>CFBundleVersion</key>' main/tmp/Payload/YouTube.app/Info.plist | grep '<string>' | awk -F'[><]' '{print $3}')" >> $GITHUB_ENV
@@ -187,15 +185,14 @@ jobs:
           BUNDLE_ID: ${{ inputs.bundle_id }}
           APP_NAME: ${{ inputs.app_name }}
           
-      - name: Upload to MinIO S3
+      - name: Upload to MinIO S3 using mc client
         if: ${{ inputs.upload_to_s3 }}
         run: |
           PACKAGE_NAME="${{ steps.build_package.outputs.package }}"
           S3_KEY="releases/YTLitePlus_${{ env.YT_VERSION }}_${{ env.YTLITE_VERSION }}/${PACKAGE_NAME}"
           
-          aws s3 cp "${{ github.workspace }}/main/packages/${PACKAGE_NAME}" \
-            "s3://${{ secrets.MINIO_BUCKET_NAME }}/${S3_KEY}" \
-            --endpoint-url ${{ secrets.MINIO_ENDPOINT_URL }}
+          # Upload using MinIO client (much more reliable than AWS CLI)
+          mc cp "${{ github.workspace }}/main/packages/${PACKAGE_NAME}" "myminio/${{ secrets.MINIO_BUCKET_NAME }}/${S3_KEY}"
           
           # Generate public URL (adjust based on your MinIO setup)
           S3_URL="${{ secrets.MINIO_ENDPOINT_URL }}/${{ secrets.MINIO_BUCKET_NAME }}/${S3_KEY}"
