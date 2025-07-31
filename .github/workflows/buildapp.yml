@@ -19,17 +19,17 @@ on:
         type: string
       s3_ipa_path:
         description: "S3 path to download IPA from (e.g., releases/YouTube_19.01.2_5.0.1/YTLitePlus_19.01.2_5.0.1.ipa)"
-        default: ""
+        default: "com.google.ios.youtube-20.30.5-Decrypted.ipa"
         required: true
         type: string
       bundle_id:
         description: "Modify the bundle ID"
-        default: "com.google.ios.youtube"
+        default: "com.test.freetube"
         required: true
         type: string
       app_name:
         description: "Modify the app name"
-        default: "YouTube"
+        default: "FreeTube"
         required: true
         type: string
       commit_id:
@@ -37,11 +37,6 @@ on:
         default: ""
         required: false
         type: string
-      upload_artifact:
-        description: "Upload iPA as artifact (Public)"
-        default: true
-        required: false
-        type: boolean
       upload_to_s3:
         description: "Upload iPA to MinIO S3"
         default: false
@@ -191,14 +186,6 @@ jobs:
           THEOS: ${{ github.workspace }}/theos
           BUNDLE_ID: ${{ inputs.bundle_id }}
           APP_NAME: ${{ inputs.app_name }}
-
-      - name: Upload Artifact
-        if: ${{ inputs.upload_artifact }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: YTLitePlus_${{ env.YT_VERSION }}_${{ env.YTLITE_VERSION }}
-          path: ${{ github.workspace }}/main/packages/${{ steps.build_package.outputs.package }}
-          if-no-files-found: error
           
       - name: Upload to MinIO S3
         if: ${{ inputs.upload_to_s3 }}
